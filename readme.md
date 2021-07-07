@@ -15,6 +15,31 @@ login:      pragmatic
 password:   reviews
 ```
 
+# jwt
+```
+получаю токен
+curl --location --request POST 'http://localhost:8080/login' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'username=pragmatic' \
+--data-urlencode 'password=reviews'
+
+добавляю контент
+curl --location --request POST 'http://localhost:8080/api/videos' \
+--header 'Authorization: Bearer ...' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "title": "Cool",
+    "description": "description",
+    "url": "https://www.youtube.com/embed/p3maH9G_DLM",
+    "author": {
+        "firstname": "firstname",
+        "lastname": "lastname",
+        "age": 30,
+        "email": "test@mail.ru"
+    }
+}'
+```
+
 # json data
 ```
 {
