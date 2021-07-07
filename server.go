@@ -12,8 +12,12 @@ import (
 )
 
 var (
-	videoService    service.VideoService       = service.New()
+	videoService service.VideoService = service.New()
+	loginService service.LoginService = service.NewLoginService()
+	jwtService   service.JWTService   = service.NewJWTService()
+
 	videoController controller.VideoController = controller.New(videoService)
+	loginController controller.LoginController = controller.NewLoginController(loginService, jwtService)
 )
 
 func setupLogOutput() {
@@ -29,7 +33,7 @@ func main() {
 	server.Static("/css", "/templates/css")
 	server.LoadHTMLGlob("templates/*.html")
 
-	server.Use(gin.Recovery(), middlewares.Logger(), middlewares.BasicAuth())
+	server.Use(gin.Recovery(), middlewares.Logger()) //, middlewares.BasicAuth()
 
 	server.GET("/test", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
@@ -37,7 +41,18 @@ func main() {
 		})
 	})
 
-	apiRoutes := server.Group("/api")
+	server.POST("/login", func(ctx *gin.Context) {
+		token := loginController.Login(ctx)
+		if token != "" {
+			ctx.JSON(http.StatusOK, gin.H{
+				"token": token,
+			})
+		} else {
+			ctx.JSON(http.StatusUnauthorized, nil)
+		}
+	})
+
+	apiRoutes := server.Group("/api", middlewares.AuthorizeJWT())
 	{
 
 		apiRoutes.GET("/videos", func(ctx *gin.Context) {
@@ -63,5 +78,9 @@ func main() {
 		viewRoutes.GET("/videos", videoController.ShowAll)
 	}
 
-	server.Run(":8081")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	server.Run(":" + port)
 }
