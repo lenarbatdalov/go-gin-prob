@@ -7,9 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lenarbatdalov/learn/controller"
+	"github.com/lenarbatdalov/learn/docs"
 	"github.com/lenarbatdalov/learn/middlewares"
 	"github.com/lenarbatdalov/learn/repository"
 	"github.com/lenarbatdalov/learn/service"
+
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
 var (
@@ -27,7 +31,19 @@ func setupLogOutput() {
 	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 }
 
+// @securityDefinitions.apikey bearerAuth
+// @in header
+// @name Authorization
 func main() {
+
+	// Swagger 2.0 Meta Information
+	docs.SwaggerInfo.Title = "Video API"
+	docs.SwaggerInfo.Description = "Video API"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "localhost"
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Schemes = []string{"https"}
+
 	defer videoRepository.CloseDB()
 	setupLogOutput()
 
@@ -106,6 +122,8 @@ func main() {
 	{
 		viewRoutes.GET("/videos", videoController.ShowAll)
 	}
+
+	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	port := os.Getenv("PORT")
 	if port == "" {
